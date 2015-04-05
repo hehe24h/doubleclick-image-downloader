@@ -1,0 +1,82 @@
+{
+	"name": "doubleclick-image-downloader",
+	"title": "Double-click Image Downloader",
+	"icon": "data/icon-48.png",
+	"icon64": "data/icon-64.png",
+	"id": "jid1-xgtdawe3yyUeBQ",
+	"description": "Double-click any image to download it quickly and quietly.",
+	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
+	"contributors": ["Ionicons (http://ionicons.com/)"],
+	"license": "GPLv3",
+	"version": "4.2.3",
+	"permissions": {
+		"private-browsing": true
+	},
+	"preferences": [{
+		"name": "targetFolder",
+		"title": "Custom Downloads folder",
+		"type": "string",
+		"value": "",
+		"description": "Write a valid path here. Leave blank to use the default Downloads folder."
+	},
+	{
+		"name": "requireShift",
+		"title": "Require Shift key to be pressed",
+		"type": "bool",
+		"value": false
+	},
+	{
+		"name": "disableLinks",
+		"title": "Link/image hybrid workaround",
+		"type": "bool",
+		"value": true,
+		"description": "Alt-double-click on a hybrid image/link to ignore the link and download the image without navigating away."
+	},
+	{
+		"name": "excludedDomainsValid",
+		"title": "Valid domain exclusion list?",
+		"type": "bool",
+		"value": true
+	},
+	{
+		"name": "excludedDomains",
+		"title": "Domain exclusion list",
+		"type": "string",
+		"value": "",
+		"description": "Domains to exclude, separated by a comma. Example: www.startpage.com,www.google.co.uk,store.steampowered.com."
+	},
+	{
+		"name": "enableRename",
+		"title": "Enable renaming",
+		"type": "bool",
+		"value": false
+	},
+	{
+		"name": "fileNamePattern",
+		"title": "Filename pattern",
+		"description": "Variables: %counter% = a counter value, %original% = the original filename, %title% = the tab's title. Example: dblclick-%title%-%counter% -> dblclick-Example Gallery-1",
+		"type": "string",
+		"value": "%counter%-%original%"
+	},
+	{
+		"name": "resetCounterOnRestart",
+		"title": "Reset the filename counter when closing/restarting Firefox.",
+		"description": "Disabling/enabling this extension will also cause a reset if this option is enabled!",
+		"type": "bool",
+		"value": false
+	},
+	{
+		"name": "enableSubfolder",
+		"title": "Create subfolders",
+		"description": "Downloaded images will be saved into this/these subfolder(s).",
+		"type": "bool",
+		"value": false
+	},
+	{
+		"name": "folderNamePattern",
+		"title": "Subfolder name pattern",
+		"description": "Variables: %domain% = the domain of the current page (not the image's source domain!), %title% = the tab's title. Example: dblclick-%domain% -> dblclick-imgur.com",
+		"type": "string",
+		"value": "%domain%"
+	}]
+}
