@@ -6,7 +6,6 @@
 	"id": "jid1-xgtdawe3yyUeBQ",
 	"description": "Double-click any image to download it quickly and quietly.",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
-	"contributors": ["Ionicons (http://ionicons.com/)"],
 	"license": "GPLv3",
 	"version": "4.2.3",
 	"permissions": {

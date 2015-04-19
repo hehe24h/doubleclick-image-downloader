@@ -116,8 +116,8 @@ exports.main = function() {
 		}).then(dl => {
 			dl.whenSucceeded().then(function() {
 				notifications.notify({
-					title: "Double-click Image Downloader",
-					text: "Image downloaded succesfully!\n" + dl.target.path,
+					title: "Image downloaded succesfully!",
+					text: dl.target.path,
 					iconURL: "file:///" + dl.target.path.replace(/\\/g, "/"),
 					onClick: function(data) {
 						tabs.open("file:///" + folder.replace(/\\/g, "/"));
@@ -131,8 +131,7 @@ exports.main = function() {
 	function onError(error) {
 		if (prefs.prefs["enableToaster"]) {
 			notifications.notify({
-				title: "Double-click Image Downloader",
-				text: "Image download error!",
+				title: "Failed to download image!",
 				iconURL: self.data.url("error-64.png")
 			});
 		}
