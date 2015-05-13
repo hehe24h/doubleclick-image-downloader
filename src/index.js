@@ -22,6 +22,16 @@ exports.main = function() {
 	const illegalCharsRegex = /[^\w\-\s\.,%;]+/ig;
 	const whiteSpaceRegex = /^\s*$/;
 	
+	function debug() {
+		if (prefs.prefs.debug) {
+			let msg = "Debug:";
+			for (let i = 0;i < arguments.length;i++) {
+				msg += " " + arguments[i];
+			}
+			console.debug(msg);
+		}
+	}
+	
 	function notifyLinkDisabler(worker) {
 		worker.port.emit("hybridWorkaroundSet", prefs.prefs["disableLinks"]);
 	}
