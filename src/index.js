@@ -24,95 +24,109 @@ const excludedDomainsRegex = (() => {
 const mimeRegex = /^image\/(svg+xml|png|p?jpeg|gif)$/;
 const illegalCharsRegex = /[^\w\-\s\.,%;]+/ig;
 const whiteSpaceRegex = /^\s*$/;
+const dispositionRegex = /filename="[^"]+\.(.+)"/i;
+const fileExtensionRegex = /\.([^\.]+)$/i;
 
-const ext = mime => {
-	const type = mimeRegex.exec(mime);
-	return type? type[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg"): null;
+function File() {
+	this.name = null;
+	this.extension = null;
+	this.getFullName = () => {
+		if (this.name && this.extension) {
+			return this.name + "." + this.extension;
+		} else {
+			throw "name or extension not set";
+		}
+	}
+}
+
+const nameFromUrl = parsedUrl => {
+	const parts = parsedUrl.pathname.split("/");
+	return parts[parts.length - (/\/$/.test(parsedUrl.pathname)? 2: 1)];
 };
 
 const rename = (filename, tab) => {
-	const out = prefs.prefs["fileNamePattern"].replace(/%counter%/g, storage.storage.counter).replace(/%original%/g, filename).replace(/%title%/g, tab.title).replace(illegalCharsRegex, "-").replace(/\s+/g, " ");
+	const out = prefs.prefs["fileNamePattern"].replace(/%counter%/g, storage.storage.counter).replace(/%original%/g, filename).replace(/%title%/g, tab.title);
 	if (prefs.prefs["fileNamePattern"].indexOf("%counter%") != -1) storage.storage.counter++;
 	return out;
-}
-
-const name = (url, tab, extension) => {
-	let filename = url.pathname.split("/");
-	filename = filename[filename.length - (url.pathname.charAt(url.pathname.length - 1) == "/"? 2: 1)].replace(illegalCharsRegex, "").replace("." + extension, "");
-	return prefs.prefs["enableRename"]? rename(filename, tab): filename;
 };
 
-const save = (url, tab) => {
-	let sdkURL = urls.URL(url);
-	if (excludedDomains.filter(domain => sdkURL.host.indexOf(domain) != -1).length == 0) {
-		debug("getting headers from", url);
+const save = (urlstring, tab) => {
+	const parsedUrl = urls.URL(urlstring);
+	if (excludedDomains.filter(domain => parsedUrl.host.indexOf(domain) != -1).length == 0) {
+		debug("getting headers from", urlstring);
 		Request({
-			url: url,
+			url: urlstring,
 			onComplete: response => {
 				if (response.status == 200) {
-					const ct = response.headers["Content-Type"];
-					let extension;
-					if (ct) {
-						debug("image is", ct);
-						extension = ext(ct);
-						debug("extension is", extension);
+					const file = new File();
+					file.name = nameFromUrl(parsedUrl);
+					
+					const contentType = response.headers["Content-Type"];
+					if (contentType && mimeRegex.test(contentType)) {
+						file.extension = mimeRegex.exec(contentType)[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
 					} else {
-						let cd = response.headers["Content-Disposition"];
-						if (cd && cd.indexOf("filename") != -1) {
-							debug("not implemented");
+						const disposition = response.headers["Content-Disposition"];
+						if (disposition && dispositionRegex.test(disposition)) {
+							file.extension = dispositionRegex.exec(disposition)[1];
 						} else {
-							throw "Image type could not be determined: fatal error";
+							if (fileExtensionRegex.test(file.name)) {
+								file.extension = fileExtensionRegex.exec(file.name)[1];
+							} else {
+								onError(urlstring + ": image type could not be determined");
+							}
 						}
 					}
 					
-					if (extension) {
-						extension = "." + extension;
-						let filename = name(sdkURL, tab, extension);
-						let folder = prefs.prefs["targetFolder"];
-						DownloadIntegration.getPreferredDownloadsDirectory().then(path => {
-							download(url, tab, path, filename, extension);
-						}).then(null, onError);
-					}
+					if (prefs.prefs["enableRename"]) file.name = rename(file.name, tab);
+					if (file.name.indexOf("." + file.extension) != -1) file.name = file.name.replace(new RegExp("\\." + file.extension, "g"), ""); 
+					file.name = file.name.replace(illegalCharsRegex, "-").replace(/\s+/g, " ");
+					
+					DownloadIntegration.getPreferredDownloadsDirectory().then(folder => {
+						download(parsedUrl, tab, folder, file);
+					}).then(null, onError);
 				} else {
-					onError(url + ": " + response.status);
+					onError(urlstring + ": " + response.status);
 				}
 			}
 		}).head();
 	}
-};
+}
 
-const download = (url, tab, folder, filename, extension) => {
+const download = (parsedUrl, tab, folder, file) => {
 	if (prefs.prefs["enableSubfolder"]) {
-		folder = fileIO.join(folder, prefs.prefs["folderNamePattern"].replace(/%domain%/g, urls.URL(tab.url).host).replace(/%title%/g, tab.title).replace(illegalCharsRegex, "-").replace(/\s+/g, " "));
+		folder = fileIO.join(folder, prefs.prefs["folderNamePattern"].replace(/%domain%/g, parsedUrl.host).replace(/%title%/g, tab.title).replace(illegalCharsRegex, "-").replace(/\s+/g, " "));
 		fileIO.mkpath(folder);
 	}
-	let target = fileIO.join(folder, filename + extension);
+	let target = fileIO.join(folder, file.getFullName());
 	if (fileIO.exists(target)) {
 		let counter = 1;
 		while(fileIO.exists(target)) {
-			target = fileIO.join(folder, filename + "_" + (counter++) + extension);
+			target = fileIO.join(folder, file.name + "_" + (counter++) + "." + file.extension);
 		}
 	}
 	
-	Downloads.createDownload({
-		"source": {
-			"url": url,
-			"isPrivate": privateBrowsing.isPrivate(tab)
-		},
-		"target": target
-	}).then(dl => {
-		dl.whenSucceeded().then(function() {
-			notifications.notify({
-				title: "Image downloaded succesfully!",
-				text: dl.target.path,
-				iconURL: "file:///" + dl.target.path.replace(/\\/g, "/"),
-				onClick: function(data) {
-					tabs.open("file:///" + folder.replace(/\\/g, "/"));
-				}
-			});
+	Downloads.getList(Downloads.ALL).then(list => {
+		Downloads.createDownload({
+			"source": {
+				"url": parsedUrl.toString(),
+				"isPrivate": privateBrowsing.isPrivate(tab)
+			},
+			"target": target
+		}).then(dl => {
+			dl.whenSucceeded().then(function() {
+				if (prefs.prefs["notify"]) notifications.notify({
+					title: "Image downloaded succesfully!",
+					text: dl.target.path,
+					iconURL: "file:///" + dl.target.path.replace(/\\/g, "/"),
+					onClick: function(data) {
+						tabs.open("file:///" + folder.replace(/\\/g, "/"));
+					}
+				});
+			}).then(null, onError);
+			list.add(dl);
+			dl.start().then(null, onError);
 		}).then(null, onError);
-		dl.start().then(null, onError);
-	}).then(null, onError);
+	}, onError);
 };
 
 const onError = error => {
@@ -120,12 +134,12 @@ const onError = error => {
 		title: "Failed to download image!",
 		iconURL: self.data.url("error-64.png")
 	});
-	console.warn(error);
+	throw error;
 };
 
 let excludedDomains = [];
 const excludedDomainsPref = validatePref("excludedDomains", value => excludedDomainsRegex.test(value), (valid, value) => {
-	excludedDomains = value == ""? []: value.split(",");
+	excludedDomains = whiteSpaceRegex.test(value)? []: value.split(",");
 });
 
 if (!storage.storage.counter) storage.storage.counter = 1;

@@ -18,6 +18,12 @@
 		"value": false
 	},
 	{
+		"name": "notify",
+		"title": "Show preview toaster when download completes",
+		"type": "bool",
+		"value": true
+	},
+	{
 		"name": "requireShift",
 		"title": "Require Shift key to be pressed",
 		"type": "bool",
