@@ -18,24 +18,10 @@
 		"value": false
 	},
 	{
-		"name": "targetFolder",
-		"title": "Custom Downloads folder",
-		"type": "string",
-		"value": "",
-		"description": "Write a valid path here. Leave blank to use the default Downloads folder."
-	},
-	{
 		"name": "requireShift",
 		"title": "Require Shift key to be pressed",
 		"type": "bool",
 		"value": false
-	},
-	{
-		"name": "disableLinks",
-		"title": "Link/image hybrid workaround",
-		"type": "bool",
-		"value": true,
-		"description": "Alt-double-click on a hybrid image/link to ignore the link and download the image without navigating away."
 	},
 	{
 		"name": "excludedDomainsValid",
