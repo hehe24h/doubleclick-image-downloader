@@ -6,7 +6,7 @@ const ensureFullURL = href => {
 
 const sendURL = url => {
 	self.port.emit("image", {
-		"url": decodeURIComponent(url),
+		"url": url,
 		"shift": shiftdown
 	});
 };
