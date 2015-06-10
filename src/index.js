@@ -14,7 +14,6 @@ const {validatePref} = require("./lib/validate-prefs-1.0.1.js");
 
 Cu.import("resource://gre/modules/DownloadIntegration.jsm");
 Cu.import("resource://gre/modules/Downloads.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
 
 const excludedDomainsRegex = (() => {
 	const domainword = "[a-z0-9\\-]+";
