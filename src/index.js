@@ -74,7 +74,7 @@ const sendHead = (urlstring, tab) => {
 const evalHead = (response, parsedUrl, tab) => {
 	if (response.status == 200) {
 		const file = new File();
-		file.name = nameFromUrl(parsedUrl);
+		file.name = decodeURIComponent(nameFromUrl(parsedUrl));
 		
 		const contentType = response.headers["Content-Type"];
 		if (contentType && mimeRegex.test(contentType)) {
