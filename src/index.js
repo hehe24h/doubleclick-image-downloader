@@ -98,9 +98,14 @@ const evalHead = (response, parsedUrl, tab) => {
 		if (file.name.indexOf("." + file.extension) != -1) file.name = file.name.replace(new RegExp("\\." + file.extension, "g"), ""); 
 		file.name = file.name.replace(illegalCharsRegex, "-").replace(/\s+/g, " ");
 		
-		DownloadIntegration.getPreferredDownloadsDirectory().then(folder => {
-			download(parsedUrl, tab, folder, file);
-		}).then(null, onError);
+		const downloadRoot = prefs.prefs.downloadRoot;
+		if (downloadRoot && fileIO.exists(downloadRoot) && !fileIO.isFile(downloadRoot)) {
+			download(parsedUrl, tab, downloadRoot, file);
+		} else {
+			DownloadIntegration.getPreferredDownloadsDirectory().then(folder => {
+				download(parsedUrl, tab, folder, file);
+			}).then(null, onError);
+		}
 	} else {
 		onError(urlstring + ": " + response.status);
 	}

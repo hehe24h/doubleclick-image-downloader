@@ -7,7 +7,7 @@
 	"description": "Double-click any image to download it quickly and quietly.",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
 	"license": "GPLv3",
-	"version": "4.2.5",
+	"version": "4.2.6",
 	"permissions": {
 		"private-browsing": true
 	},
@@ -28,6 +28,13 @@
 		"title": "Require Shift key to be pressed",
 		"type": "bool",
 		"value": false
+	},
+	{
+		"name": "downloadRoot",
+		"title": "Download root folder",
+		"type": "directory",
+		"value": "",
+		"description": "Root folder to download to. Defaults to the folder specified in Firefox settings when empty or invalid."
 	},
 	{
 		"name": "excludedDomainsValid",
@@ -65,7 +72,7 @@
 	{
 		"name": "enableSubfolder",
 		"title": "Create subfolders",
-		"description": "Downloaded images will be saved into this/these subfolder(s).",
+		"description": "Downloaded images will be saved into the specified subfolder.",
 		"type": "bool",
 		"value": false
 	},
