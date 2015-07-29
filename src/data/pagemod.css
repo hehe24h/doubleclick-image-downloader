@@ -23,6 +23,7 @@
 	display: none;
 }
 
-body[data-single-click-image-download=off] #singleclick-image-downloader {
+body[data-single-click-image-download=off] #singleclick-image-downloader,
+body[data-single-click-image-download-shift-required=on]:not([data-single-click-image-download-shift-down=on]) #singleclick-image-downloader {
 	display: none !important;
 }

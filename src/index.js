@@ -188,7 +188,19 @@ prefs.on("singleClickMode", pref => {
 	const value = prefs.prefs[pref];
 	for (let i = 0;i < workers.length;i++) {
 		try {
-			workers[i].port.emit("setSingleClick", value);
+			workers[i].port.emit("setSingleClickEnabled", value);
+		} catch(error) {
+			workers.splice(i, 1);
+			i--;
+		}
+	}
+});
+
+prefs.on("requireShift", pref => {
+	const value = prefs.prefs[pref];
+	for (let i = 0;i < workers.length;i++) {
+		try {
+			workers[i].port.emit("setRequireShift", value);
 		} catch(error) {
 			workers.splice(i, 1);
 			i--;
@@ -204,8 +216,8 @@ exports.main = () => require("sdk/page-mod").PageMod({
 	contentScriptWhen: "ready",
 	contentScriptOptions: {
 		buttonUrl: self.data.url("download.png"),
-		requireShift: prefs.prefs["requireShift"],
-		singleClick: prefs.prefs.singleClickMode
+		requireShift: prefs.prefs.requireShift,
+		singleClickEnabled: prefs.prefs.singleClickMode
 	},
 	onAttach: onAttach
 });

@@ -7,16 +7,16 @@ const ensureFullURL = href => {
 const sendURL = url => {
 	self.port.emit("image", {
 		"url": url,
-		"shift": shiftdown
+		"shift": shiftDown
 	});
 };
 
 const detectShiftDown = event => {
-	if (event.keyCode == 16) shiftdown = true;
+	if (event.keyCode == 16) setShiftDown(true);
 };
 
 const detectShiftUp = event => {
-	if (event.keyCode == 16) shiftdown = false;
+	if (event.keyCode == 16) setShiftDown(false);
 };
 
 const onDblClick = event => {
@@ -58,25 +58,16 @@ const offset = () => {
 
 const stateToWord = state => state? "on": "off";
 
-const setSingleClick = value => document.body.dataset.singleClickImageDownload = stateToWord(value);
+const setSingleClickEnabled = value => document.body.dataset.singleClickImageDownload = stateToWord(value);
 
-const dl = document.createElement("div");
-dl.id = "singleclick-image-downloader";
-dl.addEventListener("click", event => sendURL(currentImg.src));
-const img = document.createElement("img");
-img.src = self.options.buttonUrl;
-dl.appendChild(img);
-document.body.appendChild(dl);
+const setRequireShift = value => document.body.dataset.singleClickImageDownloadShiftRequired = stateToWord(value);
 
-let currentImg = null;
-let shiftdown = false;
-setSingleClick(self.options.singleClick);
+const setShiftDown = value => {
+	shiftDown = value;
+	document.body.dataset.singleClickImageDownloadShiftDown = stateToWord(value);
+};
 
-document.addEventListener("dblclick", onDblClick);
-document.addEventListener("keydown", detectShiftDown);
-document.addEventListener("keyup", detectShiftUp);
-
-document.addEventListener("mouseover", event => {
+const onMouseOver = event => {
 	if (event.target != dl && event.target != img) {
 		if (currentImg) {
 			dl.classList.remove("visible");
@@ -90,6 +81,25 @@ document.addEventListener("mouseover", event => {
 			$(window).on("scroll", onscroll);
 		}
 	}
-});
+};
 
-self.port.on("setSingleClick", setSingleClick);
+const dl = document.createElement("div");
+dl.id = "singleclick-image-downloader";
+dl.addEventListener("click", event => sendURL(currentImg.src));
+const img = document.createElement("img");
+img.src = self.options.buttonUrl;
+dl.appendChild(img);
+document.body.appendChild(dl);
+
+let currentImg = null;
+let shiftDown = false;
+setSingleClickEnabled(self.options.singleClickEnabled);
+setRequireShift(self.options.requireShift);
+
+document.addEventListener("dblclick", onDblClick);
+document.addEventListener("keydown", detectShiftDown);
+document.addEventListener("keyup", detectShiftUp);
+document.addEventListener("mouseover", onMouseOver);
+
+self.port.on("setSingleClickEnabled", setSingleClickEnabled);
+self.port.on("setRequireShift", setRequireShift);
