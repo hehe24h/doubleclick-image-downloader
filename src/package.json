@@ -7,7 +7,7 @@
 	"description": "Double-click any image to download it quickly and quietly.",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
 	"license": "GPLv3",
-	"version": "4.2.6",
+	"version": "5.0.0",
 	"permissions": {
 		"private-browsing": true
 	},
@@ -28,6 +28,13 @@
 		"title": "Require Shift key to be pressed",
 		"type": "bool",
 		"value": false
+	},
+	{
+		"name": "singleClickMode",
+		"title": "Enable Single-click feature",
+		"description": "Hover over an image to get a quick download button for it.",
+		"type": "bool",
+		"value": true
 	},
 	{
 		"name": "downloadRoot",

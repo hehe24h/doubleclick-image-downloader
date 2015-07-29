@@ -25,7 +25,7 @@ const run = pref => {
 	watched[prefValid].valid = valid;
 	if (getValue(prefValid) !== void(0)) PREFS.prefs[prefValid] = valid;
 	const x = handle.callback(valid, getValue(pref));
-	if (x != void(0)) PREFS.prefs[pref] = x;
+	if (x !== void(0)) PREFS.prefs[pref] = x;
 }
 
 const validatePref = (pref, validate, callback) => {

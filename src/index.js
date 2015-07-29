@@ -10,7 +10,7 @@ const tabs = require("sdk/tabs");
 const Request = require("sdk/request").Request;
 
 const {debug} = require("./lib/debug-1.0.0.js");
-const {validatePref} = require("./lib/validate-prefs-1.0.1.js");
+const {validatePref} = require("./lib/validate-prefs-1.0.2.js");
 
 Cu.import("resource://gre/modules/DownloadIntegration.jsm");
 Cu.import("resource://gre/modules/Downloads.jsm");
@@ -25,6 +25,7 @@ const illegalCharsRegex = /[^\w\-\s\.,%;]+/ig;
 const whiteSpaceRegex = /^\s*$/;
 const dispositionRegex = /filename="([^"]+)\.(.+)"/i;
 const fileExtensionRegex = /\.([^\.]+)$/i;
+let workers = [];
 
 function File() {
 	this.name = null;
@@ -51,7 +52,15 @@ const onNotifyClick = data => tabs.open("file:///" + data);
 const onImage = (obj, worker) => {
 	if (!prefs.prefs["requireShift"] || prefs.prefs["requireShift"] && obj.shift) sendHead(obj.url, worker.tab);
 };
-const onAttach = worker => worker.port.on("image", obj => onImage(obj, worker));
+const forgetWorker = tab => workers = workers.filter(worker => worker.tab.id != tab.id);
+const onAttach = worker => {
+	worker.port.on("image", obj => onImage(obj, worker));
+	if (worker.tab) {
+		workers.push(worker);
+		worker.tab.on("ready", forgetWorker);
+		worker.tab.on("close", forgetWorker);
+	}
+};
 const onError = error => {
 	notifications.notify({
 		title: "Failed to download image!",
@@ -175,10 +184,28 @@ prefs.on("folderNamePattern", pref => {
 	}
 });
 
+prefs.on("singleClickMode", pref => {
+	const value = prefs.prefs[pref];
+	for (let i = 0;i < workers.length;i++) {
+		try {
+			workers[i].port.emit("setSingleClick", value);
+		} catch(error) {
+			workers.splice(i, 1);
+			i--;
+		}
+	}
+});
+
 exports.main = () => require("sdk/page-mod").PageMod({
 	include: "*",
-	contentScriptFile: self.data.url("listener.js"),
+	contentScriptFile: [self.data.url("jquery-2.1.4.min.js"), self.data.url("pagemod.js")],
+	contentStyleFile: self.data.url("pagemod.css"),
 	attachTo: ["existing", "top", "frame"],
 	contentScriptWhen: "ready",
+	contentScriptOptions: {
+		buttonUrl: self.data.url("download.png"),
+		requireShift: prefs.prefs["requireShift"],
+		singleClick: prefs.prefs.singleClickMode
+	},
 	onAttach: onAttach
 });

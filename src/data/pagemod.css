@@ -1,0 +1,28 @@
+#singleclick-image-downloader {
+	width: 36px;
+	height: 36px;
+	position: fixed;
+	cursor: pointer;
+	z-index: 9999;
+}
+
+#singleclick-image-downloader:hover {
+	background-color: rgba(127, 127, 127, 0.3);
+}
+
+#singleclick-image-downloader:active {
+	background-color: rgba(127, 127, 127, 0.6);
+}
+
+#singleclick-image-downloader img {
+	width: 36px;
+	height: 36px;
+}
+
+#singleclick-image-downloader:not(.visible) {
+	display: none;
+}
+
+body[data-single-click-image-download=off] #singleclick-image-downloader {
+	display: none !important;
+}
