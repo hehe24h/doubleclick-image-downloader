@@ -4,10 +4,10 @@
 	"icon": "data/icon-48.png",
 	"icon64": "data/icon-64.png",
 	"id": "jid1-xgtdawe3yyUeBQ@jetpack",
-	"description": "Double-click any image to download it quickly and quietly.",
+	"description": "Double-click any image to download it quickly and quietly, or use Single-click feature!",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
 	"license": "GPLv3",
-	"version": "5.1.0",
+	"version": "5.1.1",
 	"permissions": {
 		"private-browsing": true
 	},

@@ -24,7 +24,7 @@ const mimeRegex = /^image\/(svg+xml|png|p?jpeg|gif)$/;
 const illegalCharsRegex = /[^\w\-\s\.,%;]+/ig;
 const whiteSpaceRegex = /^\s*$/;
 const dispositionRegex = /filename="([^"]+)\.(.+)"/i;
-const fileExtensionRegex = /\.([^\.]+)$/i;
+const fileNameRegex = /(.+)\.([^\.]+)$/i;
 let workers = [];
 
 function File() {
@@ -83,23 +83,22 @@ const sendHead = (urlstring, tab) => {
 const evalHead = (response, parsedUrl, tab) => {
 	if (response.status == 200) {
 		const file = new File();
-		file.name = decodeURIComponent(nameFromUrl(parsedUrl));
 		
-		const contentType = response.headers["Content-Type"];
-		if (contentType && mimeRegex.test(contentType)) {
-			file.extension = mimeRegex.exec(contentType)[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
+		const disposition = response.headers["Content-Disposition"];
+		if (disposition && dispositionRegex.test(disposition)) {
+			const result = dispositionRegex.exec(disposition);
+			file.name = result[1];
+			file.extension = result[2];
 		} else {
-			const disposition = response.headers["Content-Disposition"];
-			if (disposition && dispositionRegex.test(disposition)) {
-				const result = dispositionRegex.exec(disposition);
+			const urlName = decodeURIComponent(nameFromUrl(parsedUrl));
+			if (fileNameRegex.test(urlName)) {
+				const result = fileNameRegex.exec(urlName);
 				file.name = result[1];
 				file.extension = result[2];
 			} else {
-				if (fileExtensionRegex.test(file.name)) {
-					file.extension = fileExtensionRegex.exec(file.name)[2];
-				} else {
-					onError(parsedUrl.toString() + ": image type could not be determined");
-				}
+				file.name = urlName;
+				const contentType = response.headers["Content-Type"];
+				if (contentType && mimeRegex.test(contentType)) file.extension = mimeRegex.exec(contentType)[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
 			}
 		}
 		
