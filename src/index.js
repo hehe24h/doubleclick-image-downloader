@@ -9,11 +9,14 @@ const fileIO = require("sdk/io/file");
 const tabs = require("sdk/tabs");
 const Request = require("sdk/request").Request;
 
-const {debug} = require("./lib/debug-1.0.0.js");
 const {validatePref} = require("./lib/validate-prefs-1.0.2.js");
 
 Cu.import("resource://gre/modules/DownloadIntegration.jsm");
 Cu.import("resource://gre/modules/Downloads.jsm");
+
+const debug = (...args) => {
+	if (prefs.prefs.debug) console.debug(...args);
+};
 
 const excludedDomainsRegex = (() => {
 	const domainword = "[a-z0-9\\-]+";
@@ -23,20 +26,16 @@ const excludedDomainsRegex = (() => {
 const mimeRegex = /^image\/(svg+xml|png|p?jpeg|gif)$/;
 const illegalCharsRegex = /[^\w\-\s\.,%;]+/ig;
 const whiteSpaceRegex = /^\s*$/;
-const dispositionRegex = /filename="([^"]+)\.(.+)"/i;
+const dispositionRegex = /filename="([^"]+)(?:\.(.+))?"/i;
 const fileNameRegex = /(.+)\.([^\.]+)$/i;
-let workers = [];
+const workers = [];
 
 function File() {
-	this.name = null;
-	this.extension = null;
-	this.getFullName = () => {
-		if (this.name && this.extension) {
-			return this.name + "." + this.extension;
-		} else {
-			throw "name or extension not set";
-		}
-	}
+	this.name = "";
+	this.extension = "";
+	this.getDottedExtension = () => this.extension? "." + this.extension: "";
+	this.getFullName = () => this.name + this.getDottedExtension();
+	this.getSuffixedName = suffix => this.name + "_" + suffix + this.getDottedExtension();
 }
 
 const nameFromUrl = parsedUrl => {
@@ -49,16 +48,13 @@ const rename = (filename, tab) => {
 	return out;
 };
 const onNotifyClick = data => tabs.open("file:///" + data);
-const onImage = (obj, worker) => {
-	if (!prefs.prefs["requireShift"] || prefs.prefs["requireShift"] && obj.shift) sendHead(obj.url, worker.tab);
-};
-const forgetWorker = tab => workers = workers.filter(worker => worker.tab.id != tab.id);
+const onImage = (obj, worker) => sendHead(obj.url, worker.tab);
+const onDetach = worker => workers.splice(workers.indexOf(worker), 1);
 const onAttach = worker => {
-	worker.port.on("image", obj => onImage(obj, worker));
 	if (worker.tab) {
+		worker.port.on("image", obj => onImage(obj, worker));
 		workers.push(worker);
-		worker.tab.on("ready", forgetWorker);
-		worker.tab.on("close", forgetWorker);
+		worker.on("detach", onDetach);
 	}
 };
 const onError = error => {
@@ -98,7 +94,9 @@ const evalHead = (response, parsedUrl, tab) => {
 			} else {
 				file.name = urlName;
 				const contentType = response.headers["Content-Type"];
-				if (contentType && mimeRegex.test(contentType)) file.extension = mimeRegex.exec(contentType)[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
+				if (contentType && mimeRegex.test(contentType)) {
+					file.extension = mimeRegex.exec(contentType)[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
+				}
 			}
 		}
 		
@@ -128,7 +126,7 @@ const download = (parsedUrl, tab, folder, file) => {
 	if (fileIO.exists(target)) {
 		let counter = 1;
 		while(fileIO.exists(target)) {
-			target = fileIO.join(folder, file.name + "_" + (counter++) + "." + file.extension);
+			target = fileIO.join(folder, file.getSuffixedName(counter++));
 		}
 	}
 	
@@ -157,7 +155,7 @@ const download = (parsedUrl, tab, folder, file) => {
 
 let excludedDomains = [];
 const excludedDomainsPref = validatePref("excludedDomains", value => excludedDomainsRegex.test(value), (valid, value) => {
-	excludedDomains = whiteSpaceRegex.test(value)? []: value.split(",");
+	if (valid) excludedDomains = whiteSpaceRegex.test(value)? []: value.split(",");
 });
 
 if (!storage.storage.counter) storage.storage.counter = 1;
@@ -185,26 +183,17 @@ prefs.on("folderNamePattern", pref => {
 
 prefs.on("singleClickMode", pref => {
 	const value = prefs.prefs[pref];
-	for (let i = 0;i < workers.length;i++) {
-		try {
-			workers[i].port.emit("setSingleClickEnabled", value);
-		} catch(error) {
-			workers.splice(i, 1);
-			i--;
-		}
-	}
+	workers.forEach(worker => worker.port.emit("setSingleClickEnabled", value));
+});
+
+prefs.on("singleClickButtonSize", pref => {
+	prefs.prefs[pref] = Math.max(8, Math.min(prefs.prefs[pref], 64));
+	workers.forEach(worker => worker.port.emit("setButtonSize", prefs.prefs[pref]));
 });
 
 prefs.on("requireShift", pref => {
 	const value = prefs.prefs[pref];
-	for (let i = 0;i < workers.length;i++) {
-		try {
-			workers[i].port.emit("setRequireShift", value);
-		} catch(error) {
-			workers.splice(i, 1);
-			i--;
-		}
-	}
+	workers.forEach(worker => worker.port.emit("setRequireShift", value));
 });
 
 exports.main = () => require("sdk/page-mod").PageMod({
@@ -214,9 +203,11 @@ exports.main = () => require("sdk/page-mod").PageMod({
 	attachTo: ["existing", "top", "frame"],
 	contentScriptWhen: "ready",
 	contentScriptOptions: {
-		buttonUrl: self.data.url("download.png"),
+		buttonOnUrl: self.data.url("download_on.png"),
+		buttonOffUrl: self.data.url("download_off.png"),
 		requireShift: prefs.prefs.requireShift,
-		singleClickEnabled: prefs.prefs.singleClickMode
+		singleClickEnabled: prefs.prefs.singleClickMode,
+		buttonSize: prefs.prefs.singleClickButtonSize
 	},
 	onAttach: onAttach
 });

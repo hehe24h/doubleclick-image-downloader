@@ -37,6 +37,12 @@
 		"value": true
 	},
 	{
+		"name": "singleClickButtonSize",
+		"title": "Single-click feature button size (px)",
+		"type": "integer",
+		"value": 64
+	},
+	{
 		"name": "downloadRoot",
 		"title": "Download root folder",
 		"type": "directory",
