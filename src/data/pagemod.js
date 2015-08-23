@@ -73,14 +73,14 @@ const onMouseOver = event => {
 	if (event.target != dl && event.target != img) {
 		img.src = self.options.buttonOffUrl;
 		if (currentImg) {
-			dl.classList.remove("visible");
+			document.body.removeChild(dl);
 			currentImg = null;
 			$(window).off("scroll", onscroll);
 		}
 		if (event.target.nodeName == "IMG") {
 			currentImg = event.target;
 			offset();
-			dl.classList.add("visible");
+			document.body.appendChild(dl);
 			$(window).on("scroll", onscroll);
 		}
 	} else {
@@ -104,7 +104,6 @@ dl.addEventListener("click", event => sendURL(currentImg.src));
 const img = document.createElement("img");
 img.src = self.options.buttonOffUrl;
 dl.appendChild(img);
-document.body.appendChild(dl);
 setButtonSize(self.options.buttonSize);
 
 let currentImg = null;
