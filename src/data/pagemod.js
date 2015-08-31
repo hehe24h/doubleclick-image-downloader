@@ -57,16 +57,16 @@ const offset = () => {
 
 const stateToWord = state => state? "on": "off";
 
-const setSingleClickEnabled = value => document.body.dataset.singleClickImageDownload = stateToWord(value);
+const setSingleClickEnabled = value => dl.dataset.enabled = stateToWord(value);
 
 const setRequireShift = value => {
 	shiftRequired = value;
-	document.body.dataset.singleClickImageDownloadShiftRequired = stateToWord(value);
+	dl.dataset.shiftRequired = stateToWord(value);
 };
 
 const setShiftDown = value => {
 	shiftDown = value;
-	document.body.dataset.singleClickImageDownloadShiftDown = stateToWord(value);
+	dl.dataset.shiftDown = stateToWord(value);
 };
 
 const onMouseOver = event => {

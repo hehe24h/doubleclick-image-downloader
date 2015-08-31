@@ -23,16 +23,27 @@ const excludedDomainsRegex = (() => {
 	const domain = "(?:%domain%\\.)+%domain%".replace(/%domain%/g, domainword);
 	return new RegExp("^(?:%domain%(?:,%domain%)*)?$".replace(/%domain%/g, domain), "i");
 })();
-const mimeRegex = /^image\/(svg+xml|png|p?jpeg|gif)$/;
+const mimeRegex = /^image\/(svg+xml|png|p?jpeg|gif|bmp)$/;
 const illegalCharsRegex = /[^\w\-\s\.,%;]+/ig;
 const whiteSpaceRegex = /^\s*$/;
-const dispositionRegex = /filename="([^"]+)(?:\.(.+))?"/i;
-const fileNameRegex = /(.+)\.([^\.]+)$/i;
+const dispositionRegex = /filename="([^"]+)"/i;
+const fileNameRegex = /(.+)\.([^\.]+)?$/i;
 const workers = [];
 
 function File() {
 	this.name = "";
 	this.extension = "";
+	this.setName = name => {
+		const parsedFileName = fileNameRegex.exec(name);
+		if (parsedFileName) {
+			debug("setting filename", parsedFileName[1], "extension", parsedFileName[2]);
+			this.name = parsedFileName[1];
+			this.extension = parsedFileName[2];
+		} else {
+			debug("setting filename", name, "no extension");
+			this.name = name;
+		}
+	};
 	this.getDottedExtension = () => this.extension? "." + this.extension: "";
 	this.getFullName = () => this.name + this.getDottedExtension();
 	this.getSuffixedName = suffix => this.name + "_" + suffix + this.getDottedExtension();
@@ -40,7 +51,7 @@ function File() {
 
 const nameFromUrl = parsedUrl => {
 	const parts = parsedUrl.pathname.split("/");
-	return parts[parts.length - (/\/$/.test(parsedUrl.pathname)? 2: 1)];
+	return parts[parts.length - (parsedUrl.pathname.charAt(parsedUrl.pathname.length - 1) == "/"? 2: 1)];
 };
 const rename = (filename, tab) => {
 	const out = prefs.prefs["fileNamePattern"].replace(/%counter%/g, storage.storage.counter).replace(/%original%/g, filename).replace(/%title%/g, tab.title);
@@ -81,28 +92,28 @@ const evalHead = (response, parsedUrl, tab) => {
 		const file = new File();
 		
 		const disposition = response.headers["Content-Disposition"];
-		if (disposition && dispositionRegex.test(disposition)) {
+		if (disposition) {
 			const result = dispositionRegex.exec(disposition);
-			file.name = result[1];
-			file.extension = result[2];
+			if (result) {
+				file.setName(result[1]);
+			}
 		} else {
 			const urlName = decodeURIComponent(nameFromUrl(parsedUrl));
-			if (fileNameRegex.test(urlName)) {
-				const result = fileNameRegex.exec(urlName);
-				file.name = result[1];
-				file.extension = result[2];
-			} else {
-				file.name = urlName;
+			file.setName(urlName);
+			if (!file.extension) {
 				const contentType = response.headers["Content-Type"];
-				if (contentType && mimeRegex.test(contentType)) {
-					file.extension = mimeRegex.exec(contentType)[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
+				if (contentType) {
+					const mime = mimeRegex.exec(contentType);
+					if (mime) {
+						file.extension = mime[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
+					}
 				}
 			}
 		}
 		
 		if (prefs.prefs["enableRename"]) file.name = rename(file.name, tab);
-		if (file.name.indexOf("." + file.extension) != -1) file.name = file.name.replace(new RegExp("\\." + file.extension, "g"), ""); 
 		file.name = file.name.replace(illegalCharsRegex, "-").replace(/\s+/g, " ");
+		file.extension = file.extension.replace(illegalCharsRegex, "-").replace(/\s+/g, " ").substring(0, 3);
 		
 		const downloadRoot = prefs.prefs.downloadRoot;
 		if (downloadRoot && fileIO.exists(downloadRoot) && !fileIO.isFile(downloadRoot)) {
