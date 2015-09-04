@@ -8,16 +8,8 @@ const sendURL = url => self.port.emit("image", {
 	"url": url
 });
 
-const detectShiftDown = event => {
-	if (event.keyCode == 16) setShiftDown(true);
-};
-
-const detectShiftUp = event => {
-	if (event.keyCode == 16) setShiftDown(false);
-};
-
 const onDblClick = event => {
-	if (!shiftRequired || shiftRequired && shiftDown) {
+	if (!shiftRequired || shiftRequired && event.shiftKey) {
 		if (event.target.nodeName == "IMG") {
 			sendURL(event.target.src);
 		} else {
@@ -44,10 +36,6 @@ const recurseForImage = element => {
 	return false;
 };
 
-const onscroll = event => {
-	if (currentImg) offset();
-};
-
 const offset = () => {
 	var offset = $(currentImg).offset();
 	offset.top = Math.max(0, offset.top - $(document).scrollTop() - buttonSize);
@@ -55,49 +43,49 @@ const offset = () => {
 	$(dl).css(offset);
 };
 
-const stateToWord = state => state? "on": "off";
-
-const setSingleClickEnabled = value => dl.dataset.enabled = stateToWord(value);
-
-const setRequireShift = value => {
-	shiftRequired = value;
-	dl.dataset.shiftRequired = stateToWord(value);
-};
-
-const setShiftDown = value => {
-	shiftDown = value;
-	dl.dataset.shiftDown = stateToWord(value);
+function buttonManager() {
+	this.state = false;
+	this.assess = (event) => {
+		const state = singleClickEnabled && (!shiftRequired || shiftRequired && event.shiftKey) && event.target.nodeName == "IMG";
+		if (this.state != state) {
+			this.state = state;
+			if (state) {
+				currentImg = event.target;
+				offset();
+				document.body.appendChild(dl);
+				document.addEventListener("scroll", offset);
+			} else {
+				document.body.removeChild(dl);
+				currentImg = null;
+				document.removeEventListener("scroll", offset);
+			}
+		}
+	};
 };
 
 const onMouseOver = event => {
-	if (event.target != dl && event.target != img) {
-		img.src = self.options.buttonOffUrl;
-		if (currentImg) {
-			document.body.removeChild(dl);
-			currentImg = null;
-			$(window).off("scroll", onscroll);
-		}
-		if (event.target.nodeName == "IMG") {
-			currentImg = event.target;
-			offset();
-			document.body.appendChild(dl);
-			$(window).on("scroll", onscroll);
-		}
-	} else {
+	if (event.target == img) {
 		img.src = self.options.buttonOnUrl;
+	} else {
+		img.src = self.options.buttonOffUrl;
+		if (event.target != currentImg) manager.assess(event);
 	}
 };
 
 const setButtonSize = size => {
 	buttonSize = size;
-	const value = buttonSize + "px"
+	const value = size + "px"
 	dl.style.width = value;
 	dl.style.height = value;
 	img.style.width = value;
 	img.style.height = value;
 };
 
-let buttonSize;
+let buttonSize = 0;
+let currentImg = null;
+let singleClickEnabled = self.options.singleClickEnabled;
+let shiftRequired = self.options.requireShift;
+
 const dl = document.createElement("div");
 dl.id = "singleclick-image-downloader";
 dl.addEventListener("click", event => sendURL(currentImg.src));
@@ -106,17 +94,15 @@ img.src = self.options.buttonOffUrl;
 dl.appendChild(img);
 setButtonSize(self.options.buttonSize);
 
-let currentImg = null;
-setSingleClickEnabled(self.options.singleClickEnabled);
-let shiftDown = false;
-let shiftRequired;
-setRequireShift(self.options.requireShift);
+const manager = new buttonManager();
 
 document.addEventListener("dblclick", onDblClick);
-document.addEventListener("keydown", detectShiftDown);
-document.addEventListener("keyup", detectShiftUp);
 document.addEventListener("mouseover", onMouseOver);
 
-self.port.on("setSingleClickEnabled", setSingleClickEnabled);
-self.port.on("setRequireShift", setRequireShift);
+self.port.on("setSingleClickEnabled", value => {
+	singleClickEnabled = value;
+});
+self.port.on("setRequireShift", value => {
+	shiftRequired = value;
+});
 self.port.on("setButtonSize", setButtonSize);

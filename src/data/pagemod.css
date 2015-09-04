@@ -3,8 +3,3 @@
 	cursor: pointer;
 	z-index: 9999;
 }
-
-#singleclick-image-downloader[data-enabled=off],
-#singleclick-image-downloader[data-shift-required=on]:not([data-shift-down=on]) {
-	display: none !important;
-}
