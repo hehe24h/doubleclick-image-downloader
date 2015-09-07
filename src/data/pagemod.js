@@ -37,15 +37,14 @@ const recurseForImage = element => {
 };
 
 const offset = () => {
-	var offset = $(currentImg).offset();
-	offset.top = Math.max(0, offset.top - $(document).scrollTop() - buttonSize);
-	offset.left = Math.max(0, offset.left - $(document).scrollLeft());
-	$(dl).css(offset);
+	const rect = currentImg.getBoundingClientRect();
+	dl.style.top = Math.max(0, Math.round(rect.y) - buttonSize) + "px";
+	dl.style.left = Math.max(0, Math.round(rect.x)) + "px";
 };
 
 function buttonManager() {
 	this.state = false;
-	this.assess = (event) => {
+	this.assess = event => {
 		const state = singleClickEnabled && (!shiftRequired || shiftRequired && event.shiftKey) && event.target.nodeName == "IMG";
 		if (this.state != state) {
 			this.state = state;

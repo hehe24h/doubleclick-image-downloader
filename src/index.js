@@ -209,7 +209,7 @@ prefs.on("requireShift", pref => {
 
 exports.main = () => require("sdk/page-mod").PageMod({
 	include: "*",
-	contentScriptFile: [self.data.url("jquery-2.1.4.min.js"), self.data.url("pagemod.js")],
+	contentScriptFile: self.data.url("pagemod.js"),
 	contentStyleFile: self.data.url("pagemod.css"),
 	attachTo: ["existing", "top", "frame"],
 	contentScriptWhen: "ready",
