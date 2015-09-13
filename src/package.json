@@ -7,7 +7,7 @@
 	"description": "Double-click any image to download it quickly and quietly, or use the Single-click feature!",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
 	"license": "GPLv3",
-	"version": "5.1.3",
+	"version": "5.1.4",
 	"permissions": {
 		"private-browsing": true
 	},
