@@ -105,7 +105,7 @@ const evalHead = (response, parsedUrl, tab) => {
 				if (contentType) {
 					const mime = mimeRegex.exec(contentType);
 					if (mime) {
-						file.extension = mime[1].toLowerCase().replace(/p?jpeg/, "jpg").replace("svg+xml", "svg");
+						file.extension = mime[1].toLowerCase().replace("svg+xml", "svg");
 					}
 				}
 			}
@@ -113,7 +113,7 @@ const evalHead = (response, parsedUrl, tab) => {
 		
 		if (prefs.prefs["enableRename"]) file.name = rename(file.name, tab);
 		file.name = file.name.replace(illegalCharsRegex, "-").replace(/\s+/g, " ");
-		file.extension = file.extension.replace(illegalCharsRegex, "-").replace(/\s+/g, " ").substring(0, 3);
+		file.extension = file.extension.replace(illegalCharsRegex, "-").replace(/p?jpeg/, "jpg").replace(/\s+/g, " ").substring(0, 3);
 		
 		const downloadRoot = prefs.prefs.downloadRoot;
 		if (downloadRoot && fileIO.exists(downloadRoot) && !fileIO.isFile(downloadRoot)) {
