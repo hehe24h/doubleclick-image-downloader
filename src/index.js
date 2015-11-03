@@ -77,13 +77,22 @@ const onError = error => {
 };
 
 const sendHead = (urlstring, tab) => {
-	const parsedUrl = urls.URL(urlstring);
-	if (excludedDomains.filter(domain => parsedUrl.host.indexOf(domain) != -1).length == 0) {
-		debug("getting headers from", urlstring);
-		Request({
-			url: urlstring,
-			onComplete: response => evalHead(response, parsedUrl, tab)
-		}).head();
+	const sourceUrl = urls.URL(urlstring);
+	const pageUrl = urls.URL(tab.url);
+	if (!excludedDomains.some(domain => ~sourceUrl.host.indexOf(domain))) {
+		debug(sourceUrl.host, "is not a blacklisted source domain");
+		if (!excludedPageDomains.some(domain => ~pageUrl.host.indexOf(domain))) {
+			debug(pageUrl.host, "is not a blacklisted page domain");
+			debug("getting headers from", urlstring);
+				Request({
+					url: urlstring,
+					onComplete: response => evalHead(response, sourceUrl, tab)
+				}).head();
+		} else {
+			debug(pageUrl.host, "is an excluded page domain");
+		}
+	} else {
+		debug(sourceUrl.host, "is an excluded source domain");
 	}
 }
 
@@ -163,6 +172,11 @@ const download = (parsedUrl, tab, folder, file) => {
 		}, onError);
 	}, onError);
 };
+
+let excludedPageDomains = [];
+const excludedPageDomainsPref = validatePref("excludedPageDomains", value => excludedDomainsRegex.test(value), (valid, value) => {
+	if (valid) excludedPageDomains = whiteSpaceRegex.test(value)? []: value.split(",");
+});
 
 let excludedDomains = [];
 const excludedDomainsPref = validatePref("excludedDomains", value => excludedDomainsRegex.test(value), (valid, value) => {

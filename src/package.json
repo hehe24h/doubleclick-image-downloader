@@ -7,7 +7,7 @@
 	"description": "Double-click any image to download it quickly and quietly, or use the Single-click feature!",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
 	"license": "GPLv3",
-	"version": "5.1.5",
+	"version": "5.2.0",
 	"permissions": {
 		"private-browsing": true
 	},
@@ -50,6 +50,19 @@
 		"description": "Root folder to download to. Defaults to the folder specified in Firefox settings when empty or invalid."
 	},
 	{
+		"name": "excludedPageDomainsValid",
+		"title": "Valid page domain exclusion list?",
+		"type": "bool",
+		"value": true
+	},
+	{
+		"name": "excludedPageDomains",
+		"title": "Page domain exclusion list",
+		"type": "string",
+		"value": "",
+		"description": "Page source domains to exclude, separated by a comma. Example: www.example.com,www.example.co.uk,example.example.com."
+	},
+	{
 		"name": "excludedDomainsValid",
 		"title": "Valid domain exclusion list?",
 		"type": "bool",
@@ -60,7 +73,7 @@
 		"title": "Domain exclusion list",
 		"type": "string",
 		"value": "",
-		"description": "Domains to exclude, separated by a comma. Example: www.startpage.com,www.google.co.uk,store.steampowered.com."
+		"description": "Image source domains to exclude, separated by a comma. Example: cdn.example.com,img.examplecdn.com,host.example.com."
 	},
 	{
 		"name": "enableRename",
