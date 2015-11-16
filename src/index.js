@@ -221,6 +221,11 @@ prefs.on("requireShift", pref => {
 	workers.forEach(worker => worker.port.emit("setRequireShift", value));
 });
 
+prefs.on("minimumImageSize", pref => {
+	const value = prefs.prefs[pref];
+	workers.forEach(worker => worker.port.emit("setMinimumImageSize", value));
+});
+
 exports.main = () => require("sdk/page-mod").PageMod({
 	include: "*",
 	contentScriptFile: self.data.url("pagemod.js"),
@@ -232,7 +237,8 @@ exports.main = () => require("sdk/page-mod").PageMod({
 		buttonOffUrl: self.data.url("download_off.png"),
 		requireShift: prefs.prefs.requireShift,
 		singleClickEnabled: prefs.prefs.singleClickMode,
-		buttonSize: prefs.prefs.singleClickButtonSize
+		buttonSize: prefs.prefs.singleClickButtonSize,
+		minimumImageSize: prefs.prefs.minimumImageSize
 	},
 	onAttach: onAttach
 });

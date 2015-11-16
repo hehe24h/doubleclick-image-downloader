@@ -10,11 +10,11 @@ const sendURL = url => self.port.emit("image", {
 
 const onDblClick = event => {
 	if (!shiftRequired || shiftRequired && event.shiftKey) {
-		if (event.target.nodeName == "IMG") {
+		if (event.target.nodeName == "IMG" && event.target.width > minimumImageSize && event.target.height > minimumImageSize) {
 			sendURL(event.target.src);
 		} else {
 			const img = recurseForImage(event.target);
-			if (img) {
+			if (img && img.width > minimumImageSize && img.height > minimumImageSize) {
 				sendURL(img.src);
 			}
 		}
@@ -45,7 +45,7 @@ const offset = () => {
 function buttonManager() {
 	this.state = false;
 	this.assess = event => {
-		const state = singleClickEnabled && (!shiftRequired || shiftRequired && event.shiftKey) && event.target.nodeName == "IMG";
+		const state = singleClickEnabled && (!shiftRequired || shiftRequired && event.shiftKey) && event.target.nodeName == "IMG" && event.target.width > minimumImageSize && event.target.height > minimumImageSize;
 		if (this.state != state) {
 			this.state = state;
 			if (state) {
@@ -84,6 +84,7 @@ let buttonSize = 0;
 let currentImg = null;
 let singleClickEnabled = self.options.singleClickEnabled;
 let shiftRequired = self.options.requireShift;
+let minimumImageSize = self.options.minimumImageSize;
 
 const dl = document.createElement("div");
 dl.id = "singleclick-image-downloader";
@@ -105,3 +106,6 @@ self.port.on("setRequireShift", value => {
 	shiftRequired = value;
 });
 self.port.on("setButtonSize", setButtonSize);
+self.port.on("setMinimumImageSize", value => {
+	minimumImageSize = value;
+});
