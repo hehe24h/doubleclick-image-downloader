@@ -7,7 +7,7 @@
 	"description": "Double-click any image to download it quickly and quietly, or use the Single-click feature!",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
 	"license": "MPL-2.0",
-	"version": "5.2.1",
+	"version": "5.2.2",
 	"permissions": {
 		"private-browsing": true
 	},
