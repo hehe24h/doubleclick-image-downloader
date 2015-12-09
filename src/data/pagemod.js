@@ -82,9 +82,9 @@ const setButtonSize = size => {
 
 let buttonSize = 0;
 let currentImg = null;
-let singleClickEnabled = self.options.singleClickEnabled;
-let shiftRequired = self.options.requireShift;
-let minimumImageSize = self.options.minimumImageSize;
+let singleClickEnabled;
+let shiftRequired;
+let minimumImageSize;
 
 const dl = document.createElement("div");
 dl.id = "singleclick-image-downloader";
@@ -92,7 +92,6 @@ dl.addEventListener("click", event => sendURL(currentImg.src));
 const img = document.createElement("img");
 img.src = self.options.buttonOffUrl;
 dl.appendChild(img);
-setButtonSize(self.options.buttonSize);
 
 const manager = new buttonManager();
 

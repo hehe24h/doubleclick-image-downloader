@@ -8,6 +8,7 @@ const urls = require("sdk/url");
 const fileIO = require("sdk/io/file");
 const tabs = require("sdk/tabs");
 const Request = require("sdk/request").Request;
+const PageMod = require("sdk/page-mod").PageMod;
 
 const {validatePref} = require("./lib/validate-prefs-1.0.2.js");
 
@@ -64,6 +65,7 @@ const onDetach = worker => workers.splice(workers.indexOf(worker), 1);
 const onAttach = worker => {
 	if (worker.tab) {
 		worker.port.on("image", obj => onImage(obj, worker));
+		setWorkerSettings(worker);
 		workers.push(worker);
 		worker.on("detach", onDetach);
 	}
@@ -173,6 +175,13 @@ const download = (parsedUrl, tab, folder, file) => {
 	}, onError);
 };
 
+const setWorkerSettings = worker => {
+	worker.port.emit("setSingleClickEnabled", prefs.prefs.singleClickMode);
+	worker.port.emit("setButtonSize", prefs.prefs.singleClickButtonSize);
+	worker.port.emit("setRequireShift", prefs.prefs.requireShift);
+	worker.port.emit("setMinimumImageSize", prefs.prefs.minimumImageSize);
+};
+
 let excludedPageDomains = [];
 const excludedPageDomainsPref = validatePref("excludedPageDomains", value => excludedDomainsRegex.test(value), (valid, value) => {
 	if (valid) excludedPageDomains = whiteSpaceRegex.test(value)? []: value.split(",");
@@ -226,7 +235,7 @@ prefs.on("minimumImageSize", pref => {
 	workers.forEach(worker => worker.port.emit("setMinimumImageSize", value));
 });
 
-exports.main = () => require("sdk/page-mod").PageMod({
+exports.main = () => PageMod({
 	include: "*",
 	contentScriptFile: self.data.url("pagemod.js"),
 	contentStyleFile: self.data.url("pagemod.css"),
@@ -234,11 +243,7 @@ exports.main = () => require("sdk/page-mod").PageMod({
 	contentScriptWhen: "ready",
 	contentScriptOptions: {
 		buttonOnUrl: self.data.url("download_on.png"),
-		buttonOffUrl: self.data.url("download_off.png"),
-		requireShift: prefs.prefs.requireShift,
-		singleClickEnabled: prefs.prefs.singleClickMode,
-		buttonSize: prefs.prefs.singleClickButtonSize,
-		minimumImageSize: prefs.prefs.minimumImageSize
+		buttonOffUrl: self.data.url("download_off.png")
 	},
 	onAttach: onAttach
 });
