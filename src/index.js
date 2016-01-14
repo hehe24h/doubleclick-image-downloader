@@ -192,8 +192,8 @@ const excludedDomainsPref = validatePref("excludedDomains", value => excludedDom
 	if (valid) excludedDomains = whiteSpaceRegex.test(value)? []: value.split(",");
 });
 
-if (!storage.storage.counter) storage.storage.counter = 1;
-if (prefs.prefs["resetCounterOnRestart"]) storage.storage.counter = 1;
+if (!storage.storage.counter) storage.storage.counter = prefs.prefs.initialCounter;
+if (prefs.prefs["resetCounterOnRestart"]) storage.storage.counter = prefs.prefs.initialCounter;
 
 prefs.on("fileNamePattern", pref => {
 	if (whiteSpaceRegex.test(prefs.prefs[pref])) {

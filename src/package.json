@@ -7,7 +7,7 @@
 	"description": "Double-click any image to download it quickly and quietly, or use the Single-click feature!",
 	"author": "Faziri/Marnes <marnick.leau@gmail.com>",
 	"license": "MPL-2.0",
-	"version": "5.2.3",
+	"version": "5.3.0",
 	"permissions": {
 		"private-browsing": true
 	},
@@ -93,6 +93,12 @@
 		"description": "Variables: %counter% = a counter value, %original% = the original filename, %title% = the tab's title. Example: dblclick-%title%-%counter% -> dblclick-Example Gallery-1",
 		"type": "string",
 		"value": "%counter%-%original%"
+	},
+	{
+		"name": "initialCounter",
+		"title": "Initial counter value",
+		"type": "integer",
+		"value": 1
 	},
 	{
 		"name": "resetCounterOnRestart",
